@@ -30,26 +30,26 @@ func IsEmpty(archive string) (bool, error) {
 }
 
 func CreateSHA256(archive string, path string, prefix string) (checksum []byte, err error) {
-	f, err := os.Create(archive)
+	a, err := os.Create(archive)
 	if err != nil {
 		return
 	}
-	defer f.Close()
+	defer a.Close()
 
-	h := sha256.New()
-	mw := io.MultiWriter(h, f)
-	w := tar.NewWriter(mw)
+	b := sha256.New()
+	c := io.MultiWriter(a, b)
+	d := tar.NewWriter(c)
 
-	err = Readdir(w, path, prefix)
+	err = Readdir(d, path, prefix)
 	if err != nil {
 		return
 	}
 
-	if err = w.Close(); err != nil {
+	if err = d.Close(); err != nil {
 		return
 	}
 
-	checksum = h.Sum(nil)
+	checksum = b.Sum(nil)
 	return
 }
 
