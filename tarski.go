@@ -3,6 +3,7 @@ package tarski
 import (
 	"archive/tar"
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"golang.org/x/sys/unix"
 	"io"
@@ -352,25 +353,29 @@ func llistxattr(path string, list []byte) (sz int, err error) {
 }
 
 func GetAllXattr(path string) (xattrs map[string]string, err error) {
-	sz, err := llistxattr(path, nil)
-	if err != nil {
+	e1 := errors.New("Extended attributes changed during retrieval.")
+
+	pre, err := llistxattr(path, nil)
+	if err != nil || pre < 0 {
 		return nil, err
 	}
-	if sz < 0 {
-		return nil, err
-	}
-	if sz == 0 {
+	if pre == 0 {
 		return nil, nil
 	}
 
-	dest := make([]byte, sz)
-	sz, err = llistxattr(path, dest)
-	if err != nil {
+	dest := make([]byte, pre)
+
+	post, err := llistxattr(path, dest)
+	if err != nil || post < 0 {
 		return nil, err
 	}
+	if post != pre {
+		return nil, e1
+	}
+
 	split := strings.Split(string(dest), "\x00")
 	if split == nil {
-		return nil, err
+		return nil, errors.New("No valid extended attribute key found.")
 	}
 	// *listxattr functions return a list of  names  as  an unordered array
 	// of null-terminated character strings (attribute names are separated
@@ -385,23 +390,24 @@ func GetAllXattr(path string) (xattrs map[string]string, err error) {
 
 	for _, x := range split {
 		xattr := string(x)
-		sz, err = unix.Getxattr(path, xattr, nil)
-		if err != nil {
+		pre, err = unix.Getxattr(path, xattr, nil)
+		if err != nil || pre < 0 {
 			return nil, err
 		}
-		if sz < 0 {
-			return nil, err
-		}
-		if sz == 0 {
-			return nil, nil
+		if pre == 0 {
+			return nil, errors.New("No valid extended attribute value found.")
 		}
 
-		val := make([]byte, sz)
-		_, err = unix.Getxattr(path, xattr, val)
-		if err != nil {
+		dest = make([]byte, pre)
+		post, err = unix.Getxattr(path, xattr, dest)
+		if err != nil || post < 0 {
 			return nil, err
 		}
-		xattrs[xattr] = string(val)
+		if post != pre {
+			return nil, e1
+		}
+
+		xattrs[xattr] = string(dest)
 	}
 
 	return xattrs, nil
