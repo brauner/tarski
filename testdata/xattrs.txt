@@ -1,0 +1,3 @@
+This file is used to test whether capabilities are preserved when taring and
+untaring. The capabilities set on this file are:
+	setcap cap_dac_override,cap_sys_tty_config+ep xattrs.txt
