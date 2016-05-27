@@ -1,9 +1,10 @@
 package tarski
 
 import (
+	"archive/tar"
+	"golang.org/x/sys/unix"
 	"io"
 	"os"
-	"archive/tar"
 	"testing"
 )
 
@@ -16,6 +17,17 @@ func TestCreate(t *testing.T) {
 		"Dir/somefile.txt",
 		"xattrs.txt",
 		"xattrs_symlink",
+	}
+
+	h, err := GetAllXattr("testdata/xattrs.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if h == nil && err == nil {
+		if err = unix.Setxattr("testdata/xattrs.txt", "user.checksum",
+			[]byte("asdfsf13434qwf1324"), 0); err != nil {
+			t.Fatal(err)
+		}
 	}
 
 	if err = Create(archive, "testdata", "testdata"); err != nil {
