@@ -109,8 +109,7 @@ func WriteHeader(w *tar.Writer, path string, entry string, f os.FileInfo) (err e
 	return w.WriteHeader(h)
 }
 
-// CopyContent copies the actual content of a file into the tar archive.
-func CopyContent(w *tar.Writer, path string) (err error) {
+func copyContent(w *tar.Writer, path string) (err error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return
@@ -167,7 +166,7 @@ func Readdir(w *tar.Writer, path string, prefix string) error {
 			return nil
 		}
 
-		if err := CopyContent(w, curpath); err != nil {
+		if err := copyContent(w, curpath); err != nil {
 			return err
 		}
 
