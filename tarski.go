@@ -109,23 +109,6 @@ func WriteHeader(w *tar.Writer, path string, entry string, f os.FileInfo) (err e
 	return w.WriteHeader(h)
 }
 
-func copyContent(w *tar.Writer, path string) (err error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return
-	}
-
-	if _, err = io.Copy(w, f); err != nil {
-		return
-	}
-
-	if err = f.Close(); err != nil {
-		return
-	}
-
-	return
-}
-
 func cleanEntry(f os.FileInfo, path string, prefix string) (entry string) {
 	entry = strings.TrimPrefix(path, prefix)
 	if entry == "" || entry == "/" {
@@ -166,7 +149,16 @@ func Readdir(w *tar.Writer, path string, prefix string) error {
 			return nil
 		}
 
-		if err := copyContent(w, curpath); err != nil {
+		g, err := os.Open(curpath)
+		if err != nil {
+			return err
+		}
+
+		if _, err = io.Copy(w, g); err != nil {
+			return err
+		}
+
+		if err = g.Close(); err != nil {
 			return err
 		}
 
