@@ -52,7 +52,7 @@ func CreateSHA256(archive string, path string, prefix string) (checksum []byte, 
 	c := io.MultiWriter(a, b)
 	d := tar.NewWriter(c)
 
-	err = Readdir(d, path, prefix)
+	err = doCreate(d, path, prefix)
 	if err != nil {
 		return
 	}
@@ -75,7 +75,7 @@ func Create(archive string, path string, prefix string) (err error) {
 
 	w := tar.NewWriter(f)
 
-	err = Readdir(w, path, prefix)
+	err = doCreate(w, path, prefix)
 	if err = w.Close(); err != nil {
 		return
 	}
@@ -126,10 +126,10 @@ func cleanEntry(f os.FileInfo, path string, prefix string) (entry string) {
 	return
 }
 
-// Readdir creates a tar archive from a the directory path and strips prefix of
+// doCreate creates a tar archive from a the directory path and strips prefix of
 // each entry. It uses filepath.Walk internally to provide deterministic input
 // in order to create e.g. content hashes of the underlying tar stream.
-func Readdir(w *tar.Writer, path string, prefix string) error {
+func doCreate(w *tar.Writer, path string, prefix string) error {
 	return filepath.Walk(path, func(curpath string, f os.FileInfo, err error) error {
 		if err != nil {
 			return err
