@@ -1,3 +1,11 @@
+/*
+Package tarski implements a simple library to deal with the creation and
+extraction of tar archives and allows for content hashes.
+
+Content hashes are created based on the tar stream. That is to say the hash is
+based on the content of all files that are copied into the tar archive.
+*/
+
 package tarski
 
 import (
