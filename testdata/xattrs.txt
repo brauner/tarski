@@ -1,3 +1,0 @@
-This file is used to test whether extended attributes are preserved when taring
-and untaring. Since extended attributes might not be preserved when cloning this
-repo each test that makes use of them must set them via *.Setxattr() calls.
