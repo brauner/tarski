@@ -61,8 +61,7 @@ func CreateSHA256(archive string, path string, prefix string) (checksum []byte, 
 		return
 	}
 
-	checksum = b.Sum(nil)
-	return
+	return b.Sum(nil), nil
 }
 
 // Create creates a tar archive.
@@ -176,11 +175,29 @@ func Extract(archive string, path string) error {
 
 	r := tar.NewReader(f)
 
-	if err = doExtract(r, path); err != io.EOF {
+	if err = doExtract(r, path); err != io.EOF && err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func ExtractSHA256(archive string, path string) (checksum []byte, err error) {
+	a, err := os.Open(archive)
+	if err != nil {
+		return
+	}
+	defer a.Close()
+
+	b := sha256.New()
+	c := io.TeeReader(a, b)
+	d := tar.NewReader(c)
+
+	if err = doExtract(d, path); err != io.EOF && err != nil {
+		return
+	}
+
+	return b.Sum(nil), nil
 }
 
 func doExtract(r *tar.Reader, path string) (err error) {
