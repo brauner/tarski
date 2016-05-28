@@ -169,6 +169,14 @@ func Extract(archive string, path string) error {
 		return err
 	}
 
+	if err = doExtract(r, path); err != io.EOF {
+		return err
+	}
+
+	return nil
+}
+
+func doExtract(r *tar.Reader, path string) (err error) {
 	for h, err := r.Next(); err != io.EOF; h, err = r.Next() {
 		if err != nil {
 			break
