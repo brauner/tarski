@@ -54,7 +54,7 @@ func setup() error {
 	f.Close()
 
 	for k, v := range testxattr {
-		if err = unix.Setxattr(prefix+entries[1], k, []byte(v), 0); err != nil {
+		if err = unix.Setxattr(prefix+entries[0], k, []byte(v), 0); err != nil {
 			f.Close()
 			return err
 		}
@@ -142,7 +142,7 @@ func TestGetAllXattr(t *testing.T) {
 	}
 
 	// Test retrieval of extended attributes for directories.
-	h, err = GetAllXattr(prefix + entries[1])
+	h, err = GetAllXattr(prefix + entries[0])
 	if err != nil {
 		t.Fatal(err)
 	}
