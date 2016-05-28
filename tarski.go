@@ -14,7 +14,7 @@ import (
 	"unsafe"
 )
 
-// Detect empty tar archive.
+// IsEmpty detects empty tar archives.
 func IsEmpty(archive string) (bool, error) {
 	f, err := os.Open(archive)
 	if err != nil {
@@ -31,7 +31,7 @@ func IsEmpty(archive string) (bool, error) {
 	return false, err
 }
 
-// Create a tar archive and return its SHA256-hash checksum.
+// CreateSHA256 creates a tar archive and return its SHA256-hash checksum.
 // The SHA256 hash of the tar archive is created based on the tar stream and not
 // simply on the resulting archive. This is a proper content hash.
 func CreateSHA256(archive string, path string, prefix string) (checksum []byte, err error) {
@@ -58,7 +58,7 @@ func CreateSHA256(archive string, path string, prefix string) (checksum []byte, 
 	return
 }
 
-// Create a tar archive.
+// Create creates a tar archive.
 func Create(archive string, path string, prefix string) (err error) {
 	f, err := os.Create(archive)
 	if err != nil {
@@ -76,7 +76,7 @@ func Create(archive string, path string, prefix string) (err error) {
 	return
 }
 
-// Write a tar header.
+// WriteHeader writes a tar header.
 // Deals with symbolic links and extended attributes.
 func WriteHeader(w *tar.Writer, path string, entry string, f os.FileInfo) (err error) {
 	var link string
@@ -102,7 +102,7 @@ func WriteHeader(w *tar.Writer, path string, entry string, f os.FileInfo) (err e
 	return w.WriteHeader(h)
 }
 
-// Copy the actual content of a file.
+// CopyContent copies the actual content of a file into the tar archive.
 func CopyContent(w *tar.Writer, path string) (err error) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -137,8 +137,9 @@ func cleanEntry(f os.FileInfo, path string, prefix string) (entry string) {
 	return
 }
 
-// Create a tar archive from a the directory path and strip prefix of the
-// resulting tar archive.
+// Readdir creates a tar archive from a the directory path and strips prefix of
+// each entry. It uses filepath.Walk internally to provide deterministic input
+// in order to create e.g. content hashes of the underlying tar stream.
 func Readdir(w *tar.Writer, path string, prefix string) error {
 	return filepath.Walk(path, func(curpath string, f os.FileInfo, err error) error {
 		if err != nil {
@@ -167,7 +168,7 @@ func Readdir(w *tar.Writer, path string, prefix string) error {
 	})
 }
 
-// Extract a tar archive under path.
+// Extract extracts a tar archive under path.
 func Extract(archive string, path string) error {
 	f, err := os.Open(archive)
 	if err != nil {
@@ -212,7 +213,7 @@ func doExtract(r *tar.Reader, path string) (err error) {
 	return err
 }
 
-// Extract a directory from a tar archive.
+// ExtractDir extracts a directory from a tar archive.
 func ExtractDir(path string, h *tar.Header) (err error) {
 	entry := filepath.Join(path, h.Name)
 	fi := h.FileInfo()
@@ -239,7 +240,7 @@ func ExtractDir(path string, h *tar.Header) (err error) {
 	return
 }
 
-// Extract a regular file from a tar archive.
+// ExtractReg extracts a regular file from a tar archive.
 func ExtractReg(path string, h *tar.Header, r *tar.Reader) (err error) {
 	fi := h.FileInfo()
 	entry := filepath.Join(path, h.Name)
@@ -287,7 +288,7 @@ func ExtractReg(path string, h *tar.Header, r *tar.Reader) (err error) {
 	return
 }
 
-// Extract a symbolic link from a tar archive.
+// ExtractSymlink extracts a symbolic link from a tar archive.
 func ExtractSymlink(path string, h *tar.Header) (err error) {
 	fi := h.FileInfo()
 	entry := filepath.Join(path, h.Name)
@@ -317,7 +318,7 @@ func ExtractSymlink(path string, h *tar.Header) (err error) {
 	return
 }
 
-// Extract a device file from a tar archive.
+// ExtractDev extracts a device file from a tar archive.
 func ExtractDev(path string, h *tar.Header) (err error) {
 	fi := h.FileInfo()
 	entry := filepath.Join(path, h.Name)
@@ -372,8 +373,8 @@ func llistxattr(path string, list []byte) (sz int, err error) {
 	return
 }
 
-// Get all extended attributes associated with a file, directory or symbolic
-// link.
+// GetAllXattr retrieves all extended attributes associated with a file,
+// directory or symbolic link.
 func GetAllXattr(path string) (xattrs map[string]string, err error) {
 	e1 := errors.New("Extended attributes changed during retrieval.")
 
