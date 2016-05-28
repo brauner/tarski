@@ -51,14 +51,18 @@ func setup() error {
 		f.Close()
 		return err
 	}
+	f.Close()
 
 	for k, v := range testxattr {
+		if err = unix.Setxattr(prefix+entries[1], k, []byte(v), 0); err != nil {
+			f.Close()
+			return err
+		}
 		if err = unix.Setxattr(prefix+entries[2], k, []byte(v), 0); err != nil {
 			f.Close()
 			return err
 		}
 	}
-	f.Close()
 
 	if err = os.Symlink(prefix+entries[2], prefix+entries[3]); err != nil {
 		return err
@@ -120,6 +124,7 @@ func TestCreate(t *testing.T) {
 func TestGetAllXattr(t *testing.T) {
 	var err error
 
+	// Test retrieval of extended attributes for regular files.
 	h, err := GetAllXattr(prefix + entries[2])
 	if err != nil {
 		t.Fatal(err)
@@ -132,7 +137,24 @@ func TestGetAllXattr(t *testing.T) {
 	for k, v := range h {
 		found, ok := h[k]
 		if !ok || found != testxattr[k] {
-			t.Fatalf("Expected to find extended attribute %s with a value of %s but did not find it.", k, v)
+			t.Fatalf("Expected to find extended attribute %s with a value of %s on regular file but did not find it.", k, v)
+		}
+	}
+
+	// Test retrieval of extended attributes for directories.
+	h, err = GetAllXattr(prefix + entries[1])
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if h == nil {
+		t.Fatalf("Expected to find extended attributes but did not find any.")
+	}
+
+	for k, v := range h {
+		found, ok := h[k]
+		if !ok || found != testxattr[k] {
+			t.Fatalf("Expected to find extended attribute %s with a value of %s on directory but did not find it.", k, v)
 		}
 	}
 }
