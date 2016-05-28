@@ -165,9 +165,6 @@ func Extract(archive string, path string) error {
 	defer f.Close()
 
 	r := tar.NewReader(f)
-	if err != nil {
-		return err
-	}
 
 	if err = doExtract(r, path); err != io.EOF {
 		return err
