@@ -330,7 +330,7 @@ func ExtractDev(path string, h *tar.Header) (err error) {
 
 // This uses ssize_t llistxattr(const char *path, char *list, size_t size); to
 // handle symbolic links (should it in the future be possible to set extended
-// attributed on symlinks): If path is a symbolic the extended attributes
+// attributed on symlinks): If path is a symbolic link the extended attributes
 // associated with the link itself are retrieved.
 func llistxattr(path string, list []byte) (sz int, err error) {
 	var _p0 *byte

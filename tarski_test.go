@@ -10,6 +10,7 @@ import (
 )
 
 const archive string = "test.tar"
+
 var prefix string = "testdata/"
 var entries = []string{
 	"Dir/",
@@ -17,8 +18,10 @@ var entries = []string{
 	"xattrs.txt",
 	"xattrs_symlink",
 }
-var xattr string = "user.checksum"
-var val string = "asdfsf13434qwf1324"
+var testxattr = map[string]string{
+	"user.checksum": "asdfsf13434qwf1324",
+	"user.random":   "This is a test",
+}
 
 func setup() error {
 	err := os.MkdirAll(prefix+entries[0], 0755)
@@ -49,9 +52,11 @@ func setup() error {
 		return err
 	}
 
-	if err = unix.Setxattr(prefix+entries[2], "user.checksum", []byte("asdfsf13434qwf1324"), 0); err != nil {
-		f.Close()
-		return err
+	for k, v := range testxattr {
+		if err = unix.Setxattr(prefix+entries[2], k, []byte(v), 0); err != nil {
+			f.Close()
+			return err
+		}
 	}
 	f.Close()
 
@@ -124,8 +129,10 @@ func TestGetAllXattr(t *testing.T) {
 		t.Fatalf("Expected to find extended attributes but did not find any.")
 	}
 
-	found, ok := h[xattr]
-	if !ok || found != val {
-		t.Fatalf("Expected to find extended attribute %s with a value of %s but did not find it.", xattr, val)
+	for k, v := range h {
+		found, ok := h[k]
+		if !ok || found != testxattr[k] {
+			t.Fatalf("Expected to find extended attribute %s with a value of %s but did not find it.", k, v)
+		}
 	}
 }
