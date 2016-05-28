@@ -11,7 +11,7 @@ import (
 
 const archive string = "test.tar"
 
-var prefix string = "testdata/"
+var prefix = "testdata/"
 var entries = []string{
 	"Dir/",
 	"Dir/somefile.txt",
