@@ -41,6 +41,8 @@ func IsEmpty(archive string) (bool, error) {
 // CreateSHA256 creates a tar archive and returns its SHA256-hash checksum.
 // The SHA256 hash of the tar archive is created based on the tar stream and not
 // simply on the resulting archive. This is a proper content hash.
+// The string given by prefix will be stripped from all entries found under
+// path.
 func CreateSHA256(archive string, path string, prefix string) (checksum []byte, err error) {
 	a, err := os.Create(archive)
 	if err != nil {
@@ -65,6 +67,8 @@ func CreateSHA256(archive string, path string, prefix string) (checksum []byte, 
 }
 
 // Create creates a tar archive.
+// The string given by prefix will be stripped from all entries found under
+// path.
 func Create(archive string, path string, prefix string) (err error) {
 	f, err := os.Create(archive)
 	if err != nil {
@@ -84,6 +88,8 @@ func Create(archive string, path string, prefix string) (err error) {
 
 // WriteHeader writes a tar header.
 // Deals with symbolic links and extended attributes.
+// The entry argument will become the name of the file, directory, etc. in the
+// tar header.
 func WriteHeader(w *tar.Writer, path string, entry string, f os.FileInfo) (err error) {
 	var link string
 
