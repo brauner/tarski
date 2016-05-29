@@ -38,7 +38,7 @@ func IsEmpty(archive string) (bool, error) {
 	return false, err
 }
 
-// CreateSHA256 creates a tar archive and return its SHA256-hash checksum.
+// CreateSHA256 creates a tar archive and returns its SHA256-hash checksum.
 // The SHA256 hash of the tar archive is created based on the tar stream and not
 // simply on the resulting archive. This is a proper content hash.
 func CreateSHA256(archive string, path string, prefix string) (checksum []byte, err error) {
@@ -182,6 +182,10 @@ func Extract(archive string, path string) error {
 	return nil
 }
 
+// ExtractSHA256 extracts a tar archive under path and returns its SHA256-hash
+// checksum.
+// The SHA256 hash of the tar archive is created based on the tar stream and not
+// simply on the resulting archive. This is a proper content hash.
 func ExtractSHA256(archive string, path string) (checksum []byte, err error) {
 	a, err := os.Open(archive)
 	if err != nil {
