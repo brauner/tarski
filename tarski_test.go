@@ -12,6 +12,7 @@ import (
 )
 
 const archive string = "test.tar"
+const extractArchive string = "testExtract"
 
 var prefix = "testdata/"
 var entries = []string{
@@ -76,6 +77,7 @@ func setup() error {
 func cleanup() {
 	os.Remove(archive)
 	os.RemoveAll(prefix)
+	os.RemoveAll(extractArchive)
 }
 
 func TestMain(m *testing.M) {
@@ -212,5 +214,31 @@ func TestCreateSHA256(t *testing.T) {
 
 	if calculatedChecksum != expectedChecksum {
 		t.Fatalf("Expected checksum %s. Received %s instead.", expectedChecksum, hex.EncodeToString(checksum))
+	}
+}
+
+func TestExtractSHA256(t *testing.T) {
+	if _, err := os.Stat(archive); err == nil {
+		os.Remove(archive)
+	}
+
+	checksum, err := CreateSHA256(archive, prefix, prefix)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedChecksum := hex.EncodeToString(checksum)
+
+	if _, err = os.Stat(archive); os.IsNotExist(err) {
+		t.Fatal(err)
+	}
+
+	checksum, err = ExtractSHA256(archive, extractArchive)
+	if err != nil {
+		t.Fatal(err)
+	}
+	calculatedChecksum := hex.EncodeToString(checksum)
+
+	if expectedChecksum != calculatedChecksum {
+		t.Fatal(err)
 	}
 }
