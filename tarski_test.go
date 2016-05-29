@@ -217,6 +217,34 @@ func TestCreateSHA256(t *testing.T) {
 	}
 }
 
+func TestExtract(t *testing.T) {
+	if _, err := os.Stat(archive); err == nil {
+		os.Remove(archive)
+	}
+
+	err := Create(archive, prefix, prefix)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err = os.Stat(archive); os.IsNotExist(err) {
+		t.Fatal(err)
+	}
+
+	if _, err := os.Stat(extractArchive); err == nil {
+		os.RemoveAll(extractArchive)
+	}
+
+	err = Extract(archive, extractArchive)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err = os.Stat(extractArchive); os.IsNotExist(err) {
+		t.Fatal(err)
+	}
+}
+
 func TestExtractSHA256(t *testing.T) {
 	if _, err := os.Stat(archive); err == nil {
 		os.Remove(archive)
@@ -230,6 +258,10 @@ func TestExtractSHA256(t *testing.T) {
 
 	if _, err = os.Stat(archive); os.IsNotExist(err) {
 		t.Fatal(err)
+	}
+
+	if _, err := os.Stat(extractArchive); err == nil {
+		os.RemoveAll(extractArchive)
 	}
 
 	checksum, err = ExtractSHA256(archive, extractArchive)
