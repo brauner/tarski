@@ -83,6 +83,10 @@ func Create(archive string, path string, prefix string) (err error) {
 		return
 	}
 
+	if err = w.Close(); err != nil {
+		return
+	}
+
 	return
 }
 
