@@ -17,9 +17,12 @@ const extractArchive string = "testExtract"
 var prefix = "testdata/"
 var entries = []string{
 	"Dir/",
-	"Dir/somefile.txt",
-	"xattrs.txt",
-	"xattrs_symlink",
+	"Dir/somefile",
+	"hard",
+	"hard_link",
+	"sym",
+	"sym_link",
+	"xattrs",
 }
 var testxattr = map[string]string{
 	"user.checksum": "asdfsf13434qwf1324",
@@ -27,11 +30,13 @@ var testxattr = map[string]string{
 }
 
 func setup() error {
+	// "Dir/"
 	err := os.MkdirAll(prefix+entries[0], 0755)
 	if err != nil {
 		return err
 	}
 
+	// "Dir/somefile"
 	f, err := os.OpenFile(prefix+entries[1], os.O_RDWR|os.O_CREATE|os.O_EXCL, 0644)
 	if err != nil {
 		return err
@@ -44,7 +49,44 @@ func setup() error {
 	}
 	f.Close()
 
-	f, err = os.OpenFile(prefix+entries[2], os.O_RDWR|os.O_CREATE|os.O_EXCL, 0600)
+	// "hard"
+	f, err = os.OpenFile(prefix+entries[2], os.O_RDWR|os.O_CREATE|os.O_EXCL, 0644)
+	if err != nil {
+		return err
+	}
+
+	_, err = f.WriteString("This is a regular file to serve as the target of a hard link.")
+	if err != nil {
+		f.Close()
+		return err
+	}
+	f.Close()
+
+	// "hard_link"
+	if err = os.Link(prefix+entries[2], prefix+entries[3]); err != nil {
+		return err
+	}
+
+	// "sym"
+	f, err = os.OpenFile(prefix+entries[4], os.O_RDWR|os.O_CREATE|os.O_EXCL, 0644)
+	if err != nil {
+		return err
+	}
+
+	_, err = f.WriteString("This is a regular file to serve as the target of a symbolic link.")
+	if err != nil {
+		f.Close()
+		return err
+	}
+	f.Close()
+
+	// "sym_link"
+	if err = os.Symlink(prefix+entries[4], prefix+entries[5]); err != nil {
+		return err
+	}
+
+	// "xattrs"
+	f, err = os.OpenFile(prefix+entries[6], os.O_RDWR|os.O_CREATE|os.O_EXCL, 0600)
 	if err != nil {
 		return err
 	}
@@ -61,14 +103,10 @@ func setup() error {
 			f.Close()
 			return err
 		}
-		if err = unix.Setxattr(prefix+entries[2], k, []byte(v), 0); err != nil {
+		if err = unix.Setxattr(prefix+entries[6], k, []byte(v), 0); err != nil {
 			f.Close()
 			return err
 		}
-	}
-
-	if err = os.Symlink(prefix+entries[2], prefix+entries[3]); err != nil {
-		return err
 	}
 
 	return nil
@@ -82,7 +120,7 @@ func cleanup() {
 
 func TestMain(m *testing.M) {
 	if err := setup(); err != nil {
-		log.Println("Failed to setup test environment.")
+		log.Println(err)
 	}
 	res := m.Run()
 	cleanup()
@@ -133,7 +171,7 @@ func TestGetAllXattr(t *testing.T) {
 	var err error
 
 	// Test retrieval of extended attributes for regular files.
-	h, err := GetAllXattr(prefix + entries[2])
+	h, err := GetAllXattr(prefix + entries[6])
 	if err != nil {
 		t.Fatal(err)
 	}
